@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Website Directory</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #1e1e1e;
+      color: #fff;
+      margin: 0;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      position: relative;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .website {
+      margin: 1rem 0;
+      position: relative;
+    }
+    .website-name {
+      background: #333;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .website-name:hover {
+      background: #555;
+    }
+    .actions {
+      margin-left: 10px;
+      display: inline-block;
+    }
+    .actions button {
+      background: #d32f2f;
+      color: white;
+      border: none;
+      padding: 0.25rem 0.5rem;
+      margin-left: 4px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .actions button:hover {
+      background: #b71c1c;
+    }
+    .preview-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 9;
+    }
+    .preview-box {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #222;
+      border: 1px solid #444;
+      padding: 1rem;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      z-index: 10;
+    }
+    .preview-box iframe {
+      width: 100%;
+      height: 200px;
+      border: none;
+      border-radius: 6px;
+    }
+    .preview-box button {
+      margin-top: 0.5rem;
+      background: #4caf50;
+      border: none;
+      padding: 0.5rem 1rem;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .preview-box button:hover {
+      background: #45a049;
+    }
+    #add-btn {
+      display: block;
+      margin: 2rem auto;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      background: #2196f3;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    #add-btn:hover {
+      background: #1976d2;
+    }
+    #form-section {
+      display: none;
+      text-align: center;
+      margin-top: 1rem;
+    }
+    #form-section input {
+      padding: 0.5rem;
+      margin: 0.5rem;
+      border-radius: 5px;
+      border: none;
+      width: 200px;
+    }
+    #form-section button {
+      padding: 0.5rem 1rem;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #form-section button:hover {
+      background: #388e3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>मेरी वेबसाइट्स</h1>
+    <button id="add-btn">+ Add Website</button>
+    <div id="form-section">
+      <input type="text" id="site-name" placeholder="Website Name">
+      <input type="url" id="site-url" placeholder="https://example.com">
+      <button id="submit-site">Add</button>
+    </div>
+    <div id="website-list"></div>
+    <div class="preview-overlay" id="overlay"></div>
+    <div class="preview-box" id="previewBox">
+      <iframe src="" id="previewFrame" loading="lazy"></iframe>
+      <button id="visitBtn">Visit Site</button>
+    </div>
+  </div>
+  <script>
+    const overlay = document.getElementById('overlay');
+    const previewBox = document.getElementById('previewBox');
+    const previewFrame = document.getElementById('previewFrame');
+    const visitBtn = document.getElementById('visitBtn');
+    const list = document.getElementById('website-list');
+
+    function saveToLocalStorage() {
+      const items = [];
+      document.querySelectorAll('.website').forEach(el => {
+        items.push({
+          name: el.querySelector('.website-name').textContent,
+          url: el.getAttribute('data-url')
+        });
+      });
+      localStorage.setItem('myWebsites', JSON.stringify(items));
+    }
+
+    function loadFromLocalStorage() {
+      const data = JSON.parse(localStorage.getItem('myWebsites') || '[]');
+      list.innerHTML = '';
+      data.forEach(site => addWebsite(site.name, site.url));
+    }
+
+    function addWebsite(name, url) {
+      const div = document.createElement('div');
+      div.className = 'website';
+      div.setAttribute('data-url', url);
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'website-name';
+      nameDiv.textContent = name;
+      nameDiv.onclick = () => {
+        previewFrame.src = url;
+        visitBtn.onclick = () => window.open(url, '_blank');
+        overlay.style.display = 'block';
+        previewBox.style.display = 'block';
+      };
+      const actionsDiv = document.createElement('div');
+      actionsDiv.className = 'actions';
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = '🗑️';
+      deleteBtn.onclick = () => {
+        if (confirm('Are you sure you want to delete this website?')) {
+          div.remove();
+          saveToLocalStorage();
+        }
+      };
+      actionsDiv.appendChild(deleteBtn);
+      div.appendChild(nameDiv);
+      div.appendChild(actionsDiv);
+      list.appendChild(div);
+      saveToLocalStorage();
+    }
+
+    overlay.onclick = () => {
+      overlay.style.display = 'none';
+      previewBox.style.display = 'none';
+      previewFrame.src = '';
+    };
+
+    document.getElementById('add-btn').onclick = () => {
+      const form = document.getElementById('form-section');
+      form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    };
+
+    document.getElementById('submit-site').onclick = () => {
+      const name = document.getElementById('site-name').value.trim();
+      const url = document.getElementById('site-url').value.trim();
+      if (!name || !url) return alert('Please enter name and URL');
+      addWebsite(name, url);
+      document.getElementById('site-name').value = '';
+      document.getElementById('site-url').value = '';
+      document.getElementById('form-section').style.display = 'none';
+    };
+
+    loadFromLocalStorage();
+  </script>
+</body>
+</html>
